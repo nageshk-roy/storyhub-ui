@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { useQuill } from "react-quilljs"
+import { useState, useEffect, useRef } from "react"
+import Quill from "quill"
 import "quill/dist/quill.snow.css"
 import api from "../services/api"
 import { useNavigate } from "react-router-dom"
@@ -8,15 +8,33 @@ import toast from "react-hot-toast"
 function WriteArticle() {
 
   const navigate = useNavigate()
-  const { quill, quillRef } = useQuill()
+  const editorRef = useRef(null)
+  const quillRef = useRef(null)
 
   const [title, setTitle] = useState("")
   const [tags, setTags] = useState("")
   const [image, setImage] = useState(null)
 
+  useEffect(() => {
+    if (editorRef.current && !quillRef.current) {
+      quillRef.current = new Quill(editorRef.current, {
+        theme: "snow",
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline"],
+            ["link", "image"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["clean"],
+          ],
+        },
+      })
+    }
+  }, [])
+
   const handlePublish = async () => {
 
-    const content = quill?.root.innerHTML
+    const content = quillRef.current?.root.innerHTML
 
     if (!title.trim()) {
       toast.error("Title is required")
@@ -52,7 +70,6 @@ function WriteArticle() {
       })
 
       toast.success("Article published successfully!")
-
       navigate("/dashboard")
 
     } catch (error) {
@@ -71,24 +88,16 @@ function WriteArticle() {
       {/* HEADER */}
 
       <div className="bg-white border-b sticky top-0 z-40">
-
         <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-
-          <h2 className="text-lg font-semibold">
-            Write a Story
-          </h2>
-
+          <h2 className="text-lg font-semibold">Write a Story</h2>
           <button
             onClick={handlePublish}
             className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition"
           >
             Publish
           </button>
-
         </div>
-
       </div>
-
 
       {/* EDITOR AREA */}
 
@@ -97,19 +106,13 @@ function WriteArticle() {
         {/* COVER IMAGE */}
 
         <div className="mb-6">
-
-          <label className="block text-sm font-medium mb-2">
-            Cover Image
-          </label>
-
+          <label className="block text-sm font-medium mb-2">Cover Image</label>
           <input
             type="file"
             onChange={(e) => setImage(e.target.files[0])}
             className="w-full border p-3 rounded"
           />
-
         </div>
-
 
         {/* TITLE */}
 
@@ -121,24 +124,16 @@ function WriteArticle() {
           onChange={(e) => setTitle(e.target.value)}
         />
 
-
         {/* EDITOR */}
 
         <div className="bg-white border rounded-lg mb-6">
-
-          <div ref={quillRef} className="h-96" />
-
+          <div ref={editorRef} className="h-96" />
         </div>
-
 
         {/* TAGS */}
 
         <div className="mb-6">
-
-          <label className="block text-sm font-medium mb-2">
-            Tags
-          </label>
-
+          <label className="block text-sm font-medium mb-2">Tags</label>
           <input
             type="text"
             placeholder="example: technology, programming"
@@ -146,21 +141,17 @@ function WriteArticle() {
             value={tags}
             onChange={(e) => setTags(e.target.value)}
           />
-
         </div>
-
 
         {/* FOOTER ACTION */}
 
         <div className="flex justify-end">
-
           <button
             onClick={handlePublish}
             className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition"
           >
             Publish Article
           </button>
-
         </div>
 
       </div>
